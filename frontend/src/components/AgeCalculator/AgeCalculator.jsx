@@ -51,57 +51,30 @@ const AgeCalculator = () => {
     };
   }, []);
 
-  const formatSlashInput = (value) => {
+    const formatSlashInput = (value) => {
     const parts = value.split('/');
     if (parts.length !== 3) return value;
-    
-    const [day, month, year] = parts;
-    const paddedDay = day.padStart(2, '0');
+
+    const [year, month, day] = parts;
+    const paddedYear = year.padStart(4, '0');
     const paddedMonth = month.padStart(2, '0');
-    
-    let fullYear = year;
-    if (year.length === 2) {
-      const yearNum = Number.parseInt(year, 10);
-      fullYear = yearNum <= 30 ? `20${year}` : `19${year}`;
-    }
-    
-    return `${paddedDay}/${paddedMonth}/${fullYear}`;
+    const paddedDay = day.padStart(2, '0');
+
+    return `${paddedYear}/${paddedMonth}/${paddedDay}`;
   };
 
   const formatDigitsInput = (digitsOnly) => {
     if (digitsOnly.length === 8) {
-      const day = digitsOnly.substring(0, 2);
-      const month = digitsOnly.substring(2, 4);
-      const year = digitsOnly.substring(4, 8);
-      return `${day}/${month}/${year}`;
+      const year = digitsOnly.substring(0, 4);
+      const month = digitsOnly.substring(4, 6);
+      const day = digitsOnly.substring(6, 8);
+      return `${year}/${month}/${day}`;
     }
-    
-    if (digitsOnly.length === 6) {
-      const day = digitsOnly.substring(0, 2);
-      const month = digitsOnly.substring(2, 4);
-      const year = digitsOnly.substring(4, 6);
-      const fullYear = Number.parseInt(year, 10) <= 30 ? `20${year}` : `19${year}`;
-      return `${day}/${month}/${fullYear}`;
-    }
-    
-    if (digitsOnly.length === 4) {
-      const year = Number.parseInt(digitsOnly, 10);
-      if (year >= 1900 && year <= 2100) {
-        return digitsOnly;
-      }
-    }
-    
+
     let formatted = '';
-    if (digitsOnly.length >= 1) {
-      formatted = digitsOnly.substring(0, 2);
-    }
-    if (digitsOnly.length >= 3) {
-      formatted += '/' + digitsOnly.substring(2, 4);
-    }
-    if (digitsOnly.length >= 5) {
-      formatted += '/' + digitsOnly.substring(4, 8);
-    }
-    
+    if (digitsOnly.length >= 1) formatted = digitsOnly.substring(0, 4);
+    if (digitsOnly.length >= 5) formatted += '/' + digitsOnly.substring(4, 6);
+    if (digitsOnly.length >= 7) formatted += '/' + digitsOnly.substring(6, 8);
     return formatted;
   };
 
@@ -109,10 +82,11 @@ const AgeCalculator = () => {
     if (value.includes('/')) {
       return formatSlashInput(value);
     }
-    
+
     const digitsOnly = value.replaceAll(/\D/g, '');
     return formatDigitsInput(digitsOnly);
   };
+
 
   const debouncedFormatInput = useCallback((value) => {
     const formatted = formatDateInput(value);
@@ -136,8 +110,9 @@ const AgeCalculator = () => {
     }, 500);
   };
 
+  // Check for YYYY/MM/DD
   const isFormValid = () => {
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    const dateRegex = /^\d{4}\/\d{2}\/\d{2}$/;
     return dateRegex.test(birthdate);
   };
 
@@ -146,7 +121,8 @@ const AgeCalculator = () => {
   };
 
   const handleDateSelect = (day, month, year) => {
-    const formattedDate = `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+    const formattedDate = `${year}/${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+
     setBirthdate(formattedDate);
     setRawInput(formattedDate);
     setSelectedDate(new Date(year, month - 1, day));
@@ -179,7 +155,9 @@ const AgeCalculator = () => {
     setAge(null);
     
     try {
+      // const formattedDob = birthdate.replaceAll('/', '-');
       const result = await calculateAgeAPI(birthdate);
+
       setAge(result);
     } catch (err) {
       setError(err.message);
